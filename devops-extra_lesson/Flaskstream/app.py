@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 api = Api(app)
+ 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
 
 db = SQLAlchemy(app)
@@ -17,25 +18,33 @@ fakeDatabase = {
 }
 
 class Task(db.Model):
-    id =  db.Column(db.Integer, primary_key=True)
-    name = db.column(db.string, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
 
+    
     def __repr__(self):
-        return f"self.name"
+        return self.name
+
 
 class Items(Resource):
     def get(self):
-        return fakeDatabase
+        tasks = Task.query.all()
+        return tasks
     
     def post(self):
         data = request.json
-        itemId = len(fakeDatabase.keys())+1
-        fakeDatabase[itemId]= {'name': data['name']}
-        return fakeDatabase
+        task = Task(name=data['name'])
+        db.session.add(task)
+        db.session.commit()
+
+        tasks = Task.query.all()
+        
+        return tasks
 
 class Item(Resource):
     def get(self, pk):
-        return fakeDatabase[pk]
+        task = Task.query.filter_by(id=pk).first(all)
+        return task
  
     def put(self,pk):
         data = request.json
